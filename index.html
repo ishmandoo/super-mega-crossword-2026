@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <link rel="icon" type="image/x-icon" href="crossword_icon.png">
+  <title>Super Mega Crossword Clues</title>
+
+
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h3>Super Mega Crossword Clues</h3>
+      <hr>
+    </header>
+    <main>
+      <div id="clue" class="across">
+        <span id="clue-header">1 Across</span>
+        <hr>
+        <div id="clue-body">This is the clue</div>
+      </div>
+    </main>
+    <footer>
+      <div class="footer">
+        <input type="number" id="clue-number-input" placeholder="Clue Number" value="1" autocomplete="off" inputmode="numeric">
+        <button id="last-button"><span id="last-number"></span>&larr;</button>
+        <button id="next-button">&rarr;<span id="next-number"></span></button>
+      </div>
+      <div class="footer">
+        <button id="across-down-button" class="across">Across</button>
+      </div>
+    </footer>
+  </div>
+</body>
+<style>
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-size: large;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+  }
+
+  .across {
+    background-color: lightcoral;
+  }
+
+  .down {
+    background-color: lightblue;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .header,
+  .footer {
+    flex: 0 0 auto;
+  }
+
+  .header h3 {
+    margin: 5px;
+  }
+
+  main {
+    flex: 1 1 auto;
+    overflow: auto;
+    margin: 10% auto;
+    padding:10px;
+  }
+
+  hr {
+    margin: 10px 0px;
+    border-color: black;
+    background-color: black;
+    color: black;
+  }
+
+  #clue {
+    padding: 15px;
+  }
+
+  #clue-header {
+    opacity: .65;
+    font-size: medium;
+  }
+
+  #clue-body {
+    font-weight: bold;
+  }
+
+
+  .footer {
+    display: flex;
+    align-items: center;
+    font: inherit;
+  }
+
+  footer {
+    margin: 5px;
+  }
+
+  #clue-number-input {
+    flex: 1;
+    height: 50px;
+    padding-left: 10px;
+  }
+
+  #clue-number-input::selection {
+    background-color: #dff2ff;
+  }
+
+  #across-down-button {
+    flex: 1;
+    height: 50px;
+    margin: 2px;
+    font: inherit;
+  }
+
+  #next-button,
+  #last-button {
+    width: 56px;
+    height: 56px;
+  }
+
+  #next-number, #last-number {
+    font-size: 8pt;
+  }
+
+  #clue-number-input,
+  #next-button,
+  #last-button {
+    margin: 2px;
+    font: inherit;
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+</style>
+
+<script>
+  let clueNumberInput = document.getElementById("clue-number-input");
+  clueNumberInput.setAttribute('autocomplete', 'off');
+  clueNumberInput.setAttribute('inputmode', 'none'); // As a backup for Android-specific keyboards
+
+  let acrossDownButton = document.getElementById("across-down-button");
+  let nextButton = document.getElementById("next-button");
+  let nextNumber = document.getElementById("next-number");
+  let lastButton = document.getElementById("last-button");
+  let lastNumber = document.getElementById("last-number");
+  let clueHeaderOutput = document.getElementById("clue-header");
+  let clueBodyOutput = document.getElementById("clue-body");
+  let clueOutput = document.getElementById("clue");
+  let timeout;
+
+  acrossClues = {
+    '1': '“Nice work, but there’s more to do”',
+    '12': '____ Punk (musical duo)',
+    '16': 'Plans that one will',
+    '22': 'Chart, to Magellan',
+    '26': 'When doubled, a Hawaiian fish',
+    '30': 'Lawyer ____ Clooney',
+    '34': 'Movement associated with a blue, pink and white flag',
+    '44': 'Principle exemplified by “veni, vidi, vici” and “reduce, reuse, recycle”',
+    '45': 'Shrek, e.g.',
+    '46': '____ Island (N.Y.C. borough)',
+    '47': 'Marmalade ingredient',
+    '50': 'Rob of “The West Wing”',
+    '51': 'Track team events',
+    '52': '16:9 is a common one for televisions',
+    '53': 'Shows happiness',
+    '55': 'Making preparations',
+    '57': 'Elite N.F.L. squad',
+    '58': 'Vietnam’s national dish',
+    '59': 'Give access to classified information',
+    '60': '',
+    '61': 'Cafe brewing devices',
+    '62': 'Be deeply affected by something',
+    '63': 'Nickname that omits “An-”',
+    '64': 'Differ',
+    '65': 'Model Bruni',
+    '67': 'Leafy dish with croutons and Parmesan, familiarly',
+    '69': 'Helpers',
+    '70': 'Singer Morse on the Hollywood Walk of Fame',
+    '71': 'Units of work',
+    '73': 'Certain erogenous zone',
+    '76': 'Nerds Gummy ____ (roundish candy)',
+    '79': 'Artemis II org.',
+    '80': 'Sidling crustacean',
+    '82': 'Devoted sects',
+    '84': 'Not real',
+    '85': 'Ingredient in beer',
+    '86': 'Veggie with a crunchy pod',
+    '90': 'Suffragist who fought for the Equal Rights Amendment',
+    '92': 'Jump for joy',
+    '94': 'B’way buy',
+    '96': 'The planets since 2006, e.g.',
+    '98': 'Post-snowfall vehicles',
+    '100': 'Dishwashing aids',
+    '104': 'Wealthy heirs, often',
+    '105': 'Platter of raw appetizers',
+    '107': 'Org. that tracks Santa',
+    '110': 'AirPods, e.g.',
+    '113': 'Actress Alexander who played Pam on “The Cosby Show”',
+    '115': 'Dipping sauces in Creole cuisine',
+    '117': 'Quick haircuts',
+    '118': '____-fulfilling prophecy',
+    '119': '“Here’s something that might help”',
+    '122': 'Currency in Cancún',
+    '123': 'Take as a bride',
+    '124': 'Actor Kinnear',
+    '126': 'Atrocities',
+    '128': 'Rabble-____ (agitator)',
+    '129': 'Gen ____',
+    '131': '“Ah, makes sense”',
+    '132': 'Haiku or elegy',
+    '134': '“I’ve watched that already”',
+    '136': 'Beach footwear',
+    '138': 'German luxury cars, colloquially',
+    '141': 'Mexican street corn dish',
+    '143': '____ Goose vodka',
+    '144': 'Assessment of computer connectivity',
+    '146': 'Dishonorable path',
+    '149': 'Like Mecca, in Islam',
+    '151': 'Beach buckets',
+    '152': 'Stayed up until sunrise working on a paper, say',
+    '155': 'Do something?',
+    '156': 'HDMI hookups, e.g.',
+    '158': 'Argued strongly (against)',
+    '160': '“Shame, shame!”',
+    '161': 'Bundle of hay',
+    '162': 'Party in a Faustian bargain',
+    '163': 'Long rant',
+    '164': 'Egg layers',
+    '165': 'Echar ____ mano (help out, in Spanish)',
+    '166': 'Beef bourguignon and lamb tagine',
+    '168': '____ acid (H₂SO₄)',
+    '170': 'Word after blue or dog',
+    '172': 'Govt. branch',
+    '173': 'Fireplace accessories',
+    '174': '',
+    '179': 'Parliament seat?',
+    '180': 'Rapper featured on Flo Rida’s “Low”',
+    '182': 'Male part of a flower',
+    '183': 'Disgraceful',
+    '185': 'CNN medical analyst Wen',
+    '187': 'Left in, on a manuscript',
+    '189': 'Massage deeply',
+    '190': 'Late-night host Jay',
+    '191': 'Reno-to-Los Angeles dir.',
+    '192': 'Grinding tools',
+    '194': '',
+    '196': '“Don’t Know Why” singer Jones',
+    '198': 'Had a beverage',
+    '200': 'Power tool brand',
+    '201': 'Neuter, as a horse',
+    '202': 'Famed Memphis street',
+    '203': 'Send nudes, say',
+    '204': 'Musses',
+    '206': 'Not sharp',
+    '207': 'Complain',
+    '208': 'Comments to the audience',
+    '210': 'Student learning civil procedure, for short',
+    '211': 'Old West outlaw',
+    '213': 'Related to Earth’s outer surface',
+    '216': 'Saw with one’s “little eye”',
+    '217': 'Noticed, colloquially',
+    '219': 'Affirm to be true',
+    '221': '',
+    '223': 'Current Swedish king Carl XVI ____',
+    '225': 'Buff',
+    '227': '“____ we all?”',
+    '228': 'Chart-____ (huge hits)',
+    '230': 'Freeload',
+    '231': 'Carnival city, familiarly',
+    '233': 'Jedi trainer who lived to be 900',
+    '234': 'Common requirement for making a return',
+    '236': 'Read, as a QR code',
+    '237': '“Crisis averted!”',
+    '238': 'God, in Portuguese',
+    '239': 'Bleeps out',
+    '240': 'Totally unacceptable',
+    '241': '“Hundo P!”',
+    '243': 'Close connections',
+    '246': 'Features of airplanes and grocery stores',
+    '248': 'Horses’ gaits',
+    '249': 'Aquafina competitor',
+    '251': 'Clothing',
+    '252': 'Having the vibe of, in a modern suffix',
+    '253': '',
+    '255': 'Royal crowns',
+    '256': 'Ones moving at a turtle’s pace',
+    '258': 'Green sauces',
+    '259': 'Like the Duomo and Colosseum',
+    '261': 'Salts containing oxygen and a halogen',
+    '263': 'Big clearance sales',
+    '265': 'Cheese with holes',
+    '266': 'Actress Hawn',
+    '267': '“Star Wars” villain',
+    '269': '',
+    '271': 'Comedian Ego',
+    '272': 'Got bigger',
+    '273': 'Dar es ____, Tanzania',
+    '275': 'IV inserters',
+    '276': 'Least polite',
+    '277': 'Structural concern for a cabin owner',
+    '279': '“Rad!”',
+    '283': '5G predecessor',
+    '284': 'They lead to two baseball outs, for short',
+    '286': 'French plural article',
+    '287': 'Lineup on a kitchen rack',
+    '289': 'Take-home pay',
+    '291': 'Middle-distance runner',
+    '292': 'Premier ____ (wine classification)',
+    '293': 'Targeted with criticism, colloquially',
+    '295': 'Pattern on a tire',
+    '297': 'Tiny amounts',
+    '299': 'Support for hangers',
+    '302': '“Tilted Arc” sculptor Richard',
+    '303': 'Reading light',
+    '304': 'Designates as a successor',
+    '308': 'Help by falsely confirming an alibi, say',
+    '309': 'Opposite of east, in Spanish',
+    '310': 'Enacted legislation, collectively',
+    '313': 'Another name for Edy’s',
+    '316': 'Like some believers in God',
+    '318': 'Noise created by a Foley artist',
+    '322': 'Vice president Agnew',
+    '323': 'Up to',
+    '324': 'Be totally unintelligible',
+    '326': '“Apparently …”',
+    '328': 'Imitated a pig',
+    '330': 'Spurs’ home',
+    '331': 'Academy Award',
+    '332': 'Decks with Major and Minor Arcana',
+    '334': 'Body of water bordered by Earth’s lowest dry land',
+    '335': 'People lacking individuality, per a modern coinage from video games',
+    '337': 'Exams for H.S. jrs.',
+    '339': 'Cultivates',
+    '341': 'Bone doc',
+    '342': 'Starbucks competitor',
+    '343': 'Flow (from)',
+    '345': 'Carrier headquartered in Sweden',
+    '346': 'Windows 95 precursor',
+    '348': 'Garments that maximize tanning surface area',
+    '351': 'Greek muse of astronomy',
+    '352': '“The vibes are ____”',
+    '354': 'Hero that doesn’t save the world?',
+    '355': '“So relaxing!”',
+    '356': 'Forms morning moisture',
+    '357': 'One of the Olsen twins',
+    '360': '',
+    '362': 'Catchy tune',
+    '363': 'Unwrap with gusto',
+    '365': '’60s Pontiacs',
+    '366': '“The Life of a Showgirl” singer, familiarly',
+    '369': 'Low-pitched brass instrument',
+    '373': 'Tiny hairs',
+    '374': 'Preceding period',
+    '375': 'Capital of Yemen',
+    '377': 'Farm storage facilities',
+    '379': 'Painter’s board',
+    '380': 'Pampers',
+    '381': 'Electrician on a film set',
+    '385': 'Bodybuilding competition since 1939',
+    '388': '“Say So” singer',
+    '390': 'Main dishes',
+    '391': '18-wheelers',
+    '392': 'Overnight ____',
+    '395': 'Chigger, by another name',
+    '396': '____ LeRoy Locke, Harlem Renaissance intellectual',
+    '397': 'Boards, as a bus',
+    '398': 'Aesthetic associated with gothic university campuses',
+    '401': 'Opposite of blesses',
+    '402': 'Oregon’s capital',
+    '403': 'Classic Windows graphics editor, familiarly',
+    '405': 'Jamie of “M*A*S*H”',
+    '406': 'Group of competitive drivers',
+    '408': 'Polar bear’s prey',
+    '410': 'Inkwell dippers',
+    '411': 'Building block of life',
+    '413': 'Plopped (down)',
+    '414': 'Boston N.B.A. team, familiarly',
+    '415': 'Sicily’s largest city',
+    '416': 'Eggs ____ (brunch dish, colloquially)',
+    '417': 'Six-line stanzas',
+    '418': 'Discussed in detail, with “out”',
+    '420': 'L.A.’s region, for short',
+    '421': 'Dirtied',
+    '423': 'West Coast school for creative types, familiarly',
+    '425': 'Recurring Tyler Perry character',
+    '426': 'Offer to a loyal airline customer',
+    '428': 'Zigs or zags',
+    '430': 'Shape of a badminton racket head',
+    '432': 'Bring up the rear',
+    '434': 'David of “The Pink Panther”',
+    '436': 'Song snippet',
+    '437': 'World septet',
+    '439': 'Emulate a lion',
+    '440': 'Dwarf planet between Mars and Jupiter',
+    '441': 'French cosmetics brand',
+    '442': 'Metal fastener',
+    '444': '____ ball',
+    '445': 'Ominous summons',
+    '446': '',
+    '448': 'Demoted, jocularly',
+    '450': 'Taxi',
+    '453': 'News anchor Burnett',
+    '454': 'Nintendo consoles with sensor bars',
+    '455': 'When viewed',
+    '457': 'Trio on Tennessee’s flag',
+    '459': 'Rightmost part of a freeway',
+    '461': 'Bindi, e.g.',
+    '463': 'Neat freaks’ opposites',
+    '464': 'Lie relaxedly',
+    '465': '',
+    '468': 'Like Egypt, among the world’s countries',
+    '470': 'Short Instagram video',
+    '472': 'Cast party attendees',
+    '473': 'Snakes, but not ladders',
+    '475': 'Home to Western Michigan University',
+    '477': 'Long time period',
+    '478': '“Should be in your inbox shortly!”',
+    '479': 'One of two “Men in Black” protagonists',
+    '480': '“We feel the same!”',
+    '482': 'Columns’ counterparts',
+    '483': '____ Talk',
+    '484': 'Tush',
+    '486': 'Removing from power',
+    '487': 'Zigzagging downhill',
+    '490': 'Some artists in the Appalachian tradition',
+    '494': 'Come apart at the ____',
+    '496': 'Not hot',
+    '498': 'Protégés',
+    '499': '“That’s craziness!”',
+    '500': 'On the house',
+    '501': 'Composer Erik',
+    '502': 'Thomas Edison has 1,093 to his name',
+    '503': '',
+    '505': 'Transitioned smoothly',
+    '507': 'Opera set in Egypt',
+    '508': 'British noble',
+    '509': 'Vuori competitor',
+    '510': 'Good-looking',
+    '512': 'After-dinner coffee order',
+    '514': 'William with a bow',
+    '515': '“Then again,” in a text',
+    '516': 'Park and Madison, in N.Y.C.',
+    '518': 'Aggressive poker play',
+    '521': 'Science fiction award',
+    '523': 'Request from',
+    '525': 'Reduces friction in',
+    '528': 'Send, as payment',
+    '530': 'Unrefined',
+    '533': 'Fifty past',
+    '535': 'Baker’s 8x8-inch container',
+    '537': 'Incredible bargains',
+    '539': 'Solution to a calculus problem?',
+    '541': 'Frenzied',
+    '543': 'Letter-shaped groove',
+    '544': '“That hurt!”',
+    '546': 'Rapper Shakur',
+    '549': '',
+    '550': 'Injury that may require arthroscopic knee surgery, for short',
+    '552': 'Texter’s “Oh, what the heck?”',
+    '553': 'Blue-green color',
+    '555': 'French fathers',
+    '557': 'László____, lead character of 2024’s “The Brutalist”',
+    '558': '“Roll Tide!” school, informally',
+    '561': 'Duvet covers, fitted sheets, etc.',
+    '563': 'Lying facedown',
+    '564': 'Emphasizes',
+    '566': 'Inundated',
+    '569': 'Neighbor of Togo',
+    '571': 'Medical sales figures, in brief',
+    '575': 'On and on',
+    '576': 'Pleased',
+    '578': 'Letters after a list',
+    '581': 'Sheep meat',
+    '582': 'Tuscan delicacies',
+    '585': 'Treats enjoyed with a cuppa',
+    '587': 'Golden ____ (awards show)',
+    '589': 'Egyptian ____ (cat breed)',
+    '592': 'Excessive hand-washer, perhaps',
+    '594': 'Procrastinator’s refrain',
+    '595': '“Helping out isn’t worth the risk”',
+    '596': 'Can openers?',
+    '598': 'Quintet that holds about 20% of the earth’s surface fresh water',
+    '599': '____ center',
+    '600': 'Term from the Latin for “solid ground”',
+    '601': 'Epitomes of slowness',
+    '602': 'Actress Falco',
+    '603': '“We have to get serious now!”',
+    '604': 'Silent-era short films',
+    '605': '“Goodness me!”',
+    '606': 'Doping substance, informally',
+    '607': 'Abel’s brother',
+    '608': 'Early computer connection protocol',
+    '609': 'Word after hot or fine',
+    '610': 'Household clearance events',
+  }
+
+  downClues = {
+    '1': 'Ensnare',
+    '2': '“Quiet!”',
+    '3': 'Dog food brand',
+    '4': 'Golfer’s accessory',
+    '5': 'Philosopher accused of corrupting Athenian youth',
+    '6': 'Chasing',
+    '7': 'Targets of neuter-and return programs',
+    '8': 'Jazz trumpeter Jones',
+    '9': 'Expresses clearly',
+    '10': 'Queens, in Quito',
+    '11': '“Chucky” actor Briones',
+    '12': 'Slightly behind, in baseball',
+    '13': 'Forever',
+    '14': 'Extract oil from shale, say',
+    '15': 'Earthling, in sci-fi',
+    '16': 'For data-gathering purposes',
+    '17': '“Easy-peasy!”',
+    '18': 'Venomous African snake',
+    '19': 'Subway entrance',
+    '20': 'One might be observed at an observatory',
+    '21': 'Number of time zones in Japan',
+    '22': 'Trunk growth',
+    '23': 'South American corn-based flatbread',
+    '24': 'Jason ____, “The Lost Boys” co-star',
+    '25': 'Paid to play',
+    '26': 'Shop with a suit tailor, perhaps',
+    '27': 'Jason’s ship, in Greek mythology',
+    '28': '“Fire away”',
+    '29': 'How a shared dessert might be split',
+    '30': 'Way to tell whether you’re high?',
+    '31': 'Princess from the island of Motunui',
+    '32': '“Darn it!”',
+    '33': 'Some jeans',
+    '34': '____ Square, London landmark',
+    '35': 'Eased up',
+    '36': '“That’s right up my ____!”',
+    '37': 'City in southern Italy or southern Florida',
+    '38': 'Residents of Damascus',
+    '39': 'Draw out for a long time',
+    '40': 'Subway scurrier',
+    '41': 'On the rocks',
+    '42': 'Esteemed',
+    '43': 'Salinger heroine',
+    '48': 'Princess in Disney’s “Enchanted”',
+    '49': 'Remove the nails from, as a cat',
+    '54': 'Toni Morrison’s second novel',
+    '56': 'Salt dispenser',
+    '60': 'Holly genus',
+    '61': 'Muse of lyric poetry',
+    '64': 'Fancy word for “shout”',
+    '66': 'Waze suggestion: Abbr.',
+    '68': 'Gateway ____ (St. Louis monument)',
+    '71': 'Effa ____, only woman in the National Baseball Hall of Fame',
+    '72': 'Rabbis, imams and priests',
+    '73': 'Long-nosed fish',
+    '74': 'Pajama parties',
+    '75': 'It can be a sham',
+    '77': 'Fishing supplies',
+    '78': 'Low-quality A.I. content',
+    '81': '____ tiger',
+    '83': 'Rotate, as an office chair',
+    '85': 'Chief ____ to the Cabinet Office (official title for the resident cat at 10 Downing Street)',
+    '87': 'Balances carefully',
+    '88': 'Catch in a net',
+    '89': 'Positive quality',
+    '91': 'Dien Bien ____, Vietnam',
+    '93': 'Word in Spanish 101 and French 101',
+    '95': 'Counterpart of heads',
+    '97': 'Called',
+    '99': 'Ability',
+    '101': 'Common environmental requirement for cars',
+    '102': 'Rained hard',
+    '103': '“Anarchy in the U.K.” band',
+    '106': '“Understand?,” informally',
+    '108': '“Stat!”',
+    '109': 'Making a deposit at the bank?',
+    '111': 'Motor homes, e.g., for short',
+    '112': 'Like some loaves and sports teams',
+    '114': 'Baseball slugger Pete',
+    '116': 'Oracle',
+    '120': 'Ancient Machu Picchu residents',
+    '121': 'Brightest star in the night sky',
+    '125': 'Driveway surface',
+    '127': 'Arms for snowmen',
+    '130': 'Sharply reject',
+    '133': 'Unruly masses of people',
+    '135': 'Spin yarns',
+    '137': '____ golf',
+    '138': 'In heat, as female cattle',
+    '139': 'Billie Holiday’s real first name',
+    '140': 'Criticized pettily',
+    '142': 'White wading birds',
+    '144': 'Lagoon barrier, at times',
+    '145': 'First James Bond movie',
+    '146': 'Tibetan monks',
+    '147': 'Description of an online image',
+    '148': 'Alleged cabal of unelected government officials',
+    '150': 'Slandered',
+    '152': 'Tropical tree',
+    '153': 'Church fixtures',
+    '154': 'Regarding this matter, in a formal document',
+    '155': 'That girl',
+    '157': 'Buzzer beater?',
+    '159': 'Simplifies, with “down”',
+    '161': 'Noisily energetic',
+    '164': '“____ I known …”',
+    '167': 'River deposit',
+    '169': 'Outdoor apparel retailer',
+    '170': 'Southern hip-hop subgenre',
+    '171': 'Uncommon occurrence',
+    '173': 'Means of watching bamboo-eating bears',
+    '174': 'Ravaged environment',
+    '175': 'Buddies from long ago',
+    '176': 'Fast driver, metaphorically',
+    '177': 'Being borrowed by',
+    '178': 'Sorrow',
+    '181': 'Antibiotic ointment',
+    '183': 'Makeshift guest bed',
+    '184': 'Telecommuter’s accessory',
+    '186': 'Lack of worldly experience',
+    '188': 'MA and PA are in it',
+    '192': 'Nuisance',
+    '193': 'Occasion that’s second only to Thanksgiving in nationwide food consumption',
+    '195': 'Bike securer',
+    '197': 'Obeyed',
+    '199': 'Pelvic floor exercises',
+    '201': 'Historic port city of Poland',
+    '202': 'Former N.F.L. quarterback Bubby',
+    '203': 'Sequences of morning yoga positions',
+    '205': 'Gentlemen',
+    '209': 'Bridge bid specification',
+    '212': 'Annual e-sports event, for short',
+    '213': 'Invent',
+    '214': 'Environmentally friendly drinking utensil',
+    '215': 'Word that can fill the blanks of “So ____!” and “Go ____!”',
+    '217': 'Pigeon shelters',
+    '218': 'Insults',
+    '220': 'Indian wedding garments',
+    '222': 'Podcast installment',
+    '224': '“Dynamite” singer Cruz',
+    '226': 'Loch ____ monster',
+    '227': 'Contribute',
+    '229': 'Free TV ad, for short',
+    '230': 'Wi-Fi device',
+    '232': 'Buckeye',
+    '234': 'Sculptures such as “The Thinker” and “The Kiss”',
+    '235': 'Bank employee',
+    '237': 'French film award',
+    '239': '“Ta-ta!”',
+    '240': 'Formal denial',
+    '241': 'Broccoli sections',
+    '242': 'Small egg',
+    '244': 'Came to one’s senses',
+    '245': 'Covers with grass',
+    '247': 'Impose, as a tax',
+    '250': 'Region between Cairo and the Mediterranean',
+    '252': 'Scoundrels',
+    '253': 'Eco-friendly cars',
+    '254': 'Les ____-Unis',
+    '257': 'Clever humor',
+    '258': 'Colorful part of a flower',
+    '260': 'Stripped-down lifestyle?',
+    '262': 'Female deer',
+    '263': 'Had a bawl',
+    '264': 'Cut, as lumber',
+    '266': 'Takes big swigs of',
+    '268': 'One of the Seven Dwarfs',
+    '270': 'Brief commercial',
+    '272': 'What might say “In 1,000 feet …”',
+    '274': 'Female zebras',
+    '276': 'Outer edge',
+    '277': 'Gradually begin dozing',
+    '278': 'Seek, as a political position',
+    '279': 'Phobia that’s difficult to get over',
+    '280': 'Counterpart of a “work wife”',
+    '281': 'Having no talent for',
+    '282': 'Mistakes',
+    '285': 'Weapon for a vampire hunter',
+    '287': 'Female pigs',
+    '288': 'Beans in edamame and tofu',
+    '290': 'Smile',
+    '291': 'Softens by soaking with sugar',
+    '292': 'Filmmaker Ethan or Joel',
+    '294': 'Versatile, umami-rich ingredient',
+    '295': 'Enthusiastically promoted',
+    '296': 'Handle differently?',
+    '298': 'Relaxed',
+    '299': '“Veep” actress DuVall',
+    '300': 'PC-to-PC connection',
+    '301': 'The far reaches of the universe',
+    '303': 'Public rituals of worship',
+    '304': 'Raggedy ____ (cloth dolls)',
+    '305': 'Privacy doc',
+    '306': 'Burning Man accommodations',
+    '307': 'Website that provides free access to research papers',
+    '311': 'Trash',
+    '312': 'Suffix with Sudan or Japan',
+    '314': 'Take a breather',
+    '315': 'Clever',
+    '317': 'Pants, colloquially',
+    '319': 'Workplace watchdog org.',
+    '320': 'Dubai’s country, for short',
+    '321': '“That’s a pity”',
+    '325': 'Turn out',
+    '327': 'Larsson who wrote “The Girl With the Dragon Tattoo”',
+    '329': 'T. rexes, e.g.',
+    '333': 'Single step',
+    '336': 'Writer Edgar Allan ____',
+    '338': 'Part of a drum kit',
+    '340': 'Term of endearment among drag queens',
+    '344': 'Class for an aspiring bilingual, for short',
+    '346': 'Impulsive and zany',
+    '347': 'Settles (up)',
+    '348': 'Reproductive glands',
+    '349': 'Like some pianos and juries',
+    '350': 'Some winter temp workers',
+    '352': 'Is in debt',
+    '353': 'In good shape',
+    '358': 'Broadcast shout-out to a parent',
+    '359': 'Acronym for an outdoor fantasy game',
+    '360': 'Above, poetically',
+    '361': 'Stamp on an invoice',
+    '362': 'Teal-colored Mountain Dew flavor',
+    '364': 'Airport surface',
+    '366': 'Domesticates',
+    '367': 'Svelte',
+    '368': 'Chewy tapioca balls',
+    '370': 'Variety',
+    '371': 'Recurring action role for Matt Damon',
+    '372': 'Seeing red',
+    '373': 'Football snappers',
+    '374': '“Stormy Weather” singer',
+    '375': 'Left-leaning, and then some',
+    '376': 'Auto transmission repair chain',
+    '378': 'Budget offerings',
+    '379': 'Fur trader’s wares',
+    '381': 'Jokes',
+    '382': 'Succulent in skin lotions',
+    '383': 'Chest bone that doesn’t attach to the sternum',
+    '384': 'Mortgages with relatively quick payoffs',
+    '386': 'Tests for purity',
+    '387': '“The Simpsons” bar',
+    '388': 'Got down at a wedding, say',
+    '389': 'Cross-promotional stunts',
+    '391': 'Pancetta or prosciutto',
+    '393': 'Paving substance',
+    '394': '“Barbie” actor Liu',
+    '397': 'Knows someone who knows someone, say',
+    '399': 'Dial on an amp',
+    '400': 'Partners on your side',
+    '402': 'Typeface flourish',
+    '403': 'Road safety grp.',
+    '404': '“That’s totally fine!”',
+    '407': 'Creatures in the video game Stellaris, for short',
+    '409': 'Some jeans',
+    '412': 'Like the most protective hazmat gear',
+    '414': '____ asada',
+    '415': 'Mammals investigated as the source of the Covid-19 pandemic',
+    '416': 'Actor Pitt',
+    '418': 'Makes stricter',
+    '419': 'Grammy-winning D.J. with hits like “Titanium” and “Without You”',
+    '421': 'Accumulates',
+    '422': 'One symbolized by a donkey',
+    '424': 'France’s third-largest city, in one spelling',
+    '425': 'French equivalent of “Dios mío!”',
+    '427': 'Totally loses it',
+    '429': 'Hunkers down through an unpleasant situation',
+    '431': 'Villainous Simon in “Uncle Tom’s Cabin”',
+    '433': 'Harum-____',
+    '435': 'Units of force',
+    '437': 'One variable in calculating the area of a rectangle',
+    '438': 'Mope',
+    '440': 'Animation sheet',
+    '443': 'Items',
+    '447': 'Fall equinox mo.',
+    '449': 'Warty critter',
+    '450': 'Curried favor with',
+    '451': '“Ah, back to peace and quiet”',
+    '452': 'Places for posters',
+    '454': 'Ryder of “Stranger Things”',
+    '455': 'Can. province',
+    '456': 'Double a duo',
+    '458': 'Adjusts to, as a thermostat',
+    '460': 'Certain daily temps',
+    '462': 'Less at ease',
+    '464': '“Word on the street was …”',
+    '466': 'Auditioner’s goal',
+    '467': 'Gerund suffix',
+    '469': 'Winter Olympics performer',
+    '471': 'Idly stick around',
+    '473': 'Brazilian currency',
+    '474': 'Prolonged attack',
+    '476': '“____ Lisa”',
+    '479': 'Keg attachment',
+    '481': 'Spotted wildcat',
+    '483': 'Impressive-sounding-but unintelligible jargon',
+    '485': 'Outlying community',
+    '487': 'In order that',
+    '488': 'Person who monitors a message board but never posts',
+    '489': 'Ponder (over)',
+    '490': 'German playwright Bertolt',
+    '491': '“Attack,” to a dog',
+    '492': 'Captain’s chart',
+    '493': 'Filled with desire, but not romantically',
+    '494': 'Like many Buffalo winters',
+    '495': '“God ____ the King”',
+    '497': 'December retrospective, maybe',
+    '499': 'Baker’s supply',
+    '500': 'Corn chip brand',
+    '503': 'Colorado native',
+    '504': 'Monopoly payment',
+    '506': 'Moon of Saturn',
+    '510': 'Susceptibility',
+    '511': 'English translation of the Spanish “ayer”',
+    '513': '“OK, don’t accept my apology then!”',
+    '515': '“I see what you’re pointing at now”',
+    '517': 'Worn-down crayon, e.g.',
+    '519': 'Rhythmic pattern in big band jazz',
+    '520': 'London’s home: Abbr.',
+    '522': 'A single time',
+    '524': 'Apartment sharer, to a Brit',
+    '526': 'Taking a break from dating men, in a modern coinage',
+    '527': 'Sound system',
+    '529': 'Gets bored with',
+    '531': 'Unappetizing bowlfuls',
+    '532': 'Ice planet in “Star Wars”',
+    '534': 'Unlikely features of work boots',
+    '536': 'Deadlocks',
+    '538': 'Ethical reservation',
+    '540': 'Achieve something through hard work',
+    '542': 'Suffix with Euro- or helio',
+    '545': 'Most cautious',
+    '547': 'Commotions',
+    '548': 'The Cavs, on scoreboards',
+    '551': 'Deadly',
+    '554': 'Second of two',
+    '556': '____ Nevada',
+    '559': 'Flat-topped landform',
+    '560': 'Advanced H.S. science class',
+    '562': 'Gold bars',
+    '565': 'Tend to, as a fire',
+    '566': 'Spanish clay pots',
+    '567': 'Physicist Alessandro who invented the first battery',
+    '568': '____ cold brew',
+    '570': 'Tennis star Osaka',
+    '572': 'Kidney-related',
+    '573': 'Morning, in Marseille',
+    '574': 'Velvety leather',
+    '577': '“I can do that for you”',
+    '578': 'Frozen waffle brand',
+    '579': 'Beach bird',
+    '580': 'First Nations group',
+    '582': 'Wall Street neighborhood, colloquially',
+    '583': 'Sushi wrapper',
+    '584': 'Figure skater Michelle',
+    '586': 'Part of the eye',
+    '588': 'Soviet gymnast Korbut',
+    '589': 'Postal delivery',
+    '590': '“Hey, don’t look ____!”',
+    '591': 'Manipulates',
+    '593': 'Sully',
+    '595': 'Setting not observed in Hawaii: Abbr.',
+    '596': 'Draw',
+    '597': 'Inbound flight info',
+  }
+
+  document.onfocus = function () {
+    clueNumberInput.select();
+  }
+
+  clueNumberInput.oninput = function (ev) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => { clueNumberInput.select() }, 2000);
+    update();
+  }
+
+  clueNumberInput.onclick = function () {
+    clueNumberInput.select();
+  }
+
+  nextButton.onclick = function () {
+    clueNumberInput.value = getNextKey();
+    update();
+    clueNumberInput.select();
+  }
+
+  lastButton.onclick = function () {
+    clueNumberInput.value = getLastKey();
+    update();
+    clueNumberInput.select();
+  }
+
+  function getClueTable() {
+    let direction = acrossDownButton.innerText;
+    return direction == "Across" ? acrossClues : downClues;
+  }
+
+
+  function getNextKey() {
+    const keys = Object.keys(getClueTable());
+    const currentIndex = keys.indexOf(clueNumberInput.value);
+
+    if (currentIndex >= keys.length - 1) {
+      return null;
+    }
+
+    return keys[currentIndex + 1].toString();
+  }
+
+  function getLastKey() {
+    const keys = Object.keys(getClueTable());
+    const currentIndex = keys.indexOf(clueNumberInput.value);
+
+    if (currentIndex <= 0) {
+      return null;
+    }
+
+    return keys[currentIndex - 1].toString();
+  }
+
+
+  function update() {
+    let clueNumber = clueNumberInput.value;
+    let direction = acrossDownButton.innerText;
+    let clue = getClueTable()[clueNumber]
+
+    let next = getNextKey()
+    if (next) {
+      nextButton.disabled = false;
+      nextNumber.innerText = next
+    } else {
+      nextButton.disabled = true;
+      nextNumber.innerText = ""
+    }
+
+    let last = getLastKey()
+    if (last) {
+      lastButton.disabled = false;
+      lastNumber.innerText = last
+    } else {
+      lastButton.disabled = true;
+      lastNumber.innerText = ""
+    }
+
+    clueHeaderOutput.innerText = `${clueNumber} ${direction}`;
+    clueBodyOutput.innerText = clue === undefined ? `Not a clue` : clue;
+    clueNumberInput.focus();
+  }
+  update()
+  clueNumberInput.select();
+
+  acrossDownButton.onclick = function () {
+    if (acrossDownButton.innerText == "Across") {
+      acrossDownButton.innerText = "Down"
+      clueOutput.classList.replace("across", "down")
+      acrossDownButton.classList.replace("across", "down")
+    } else {
+      acrossDownButton.innerText = "Across"
+      clueOutput.classList.replace("down", "across")
+      acrossDownButton.classList.replace("down", "across")
+    }
+    update();
+  }
+</script>
+
+</html>
