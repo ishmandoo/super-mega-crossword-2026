@@ -1,0 +1,1 @@
+A fan-made app for browsing the clues for the 2026 NYT Super Mega Crossword.
