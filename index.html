@@ -964,7 +964,7 @@
     }
 
     clueHeaderOutput.innerText = `${clueNumber} ${direction}`;
-    clueBodyOutput.innerText = clue ? clue : `Not a clue`;
+    clueBodyOutput.innerText = clue === undefined ? `Not a clue` : clue;
     clueNumberInput.focus();
   }
   update()
